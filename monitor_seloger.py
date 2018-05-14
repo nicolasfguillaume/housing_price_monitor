@@ -37,16 +37,20 @@ if __name__ == '__main__':
 	while True:
 	    response = requests.get(url, headers=headers, allow_redirects=False)
 	    soup = BeautifulSoup(response.text, "html5lib")
-	    posts = set(update())
+	    posts = update()
+	    # compare seulement avec les 10 derniers posts, pour eviter de faire reapparaitre des anciens posts
+	    # lorsque des posts recents sont supprimes
+	    posts = set(posts[0:10])
 	    
 	    new_posts = posts - posts_old
 	    if new_posts:
-	        print new_posts
 	        # TODO calculer le eur/m2 et filtrer sur < 9000
 	        browse(list(new_posts)) 
 	    
 	    posts_old = posts
 	    
-	    print len(new_posts), 'new posts - last check at', datetime.datetime.now()
+	    print len(new_posts), 'new post(s) - last check at', datetime.datetime.now()
+	    if new_posts:
+	        print new_posts
 
 	    time.sleep(60*5)
