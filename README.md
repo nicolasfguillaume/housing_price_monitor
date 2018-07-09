@@ -1,6 +1,6 @@
 # monitor_seloger
 
-+ Simple scripts that checks new posts every 10 min
++ Simple script that checks new posts every 10 min
 
 + Works for major French real estate website: seloger.com, leboncoin.com, pap.com
 
