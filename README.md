@@ -5,3 +5,5 @@
 + Works for major French real estate website: seloger.com, leboncoin.com, pap.com
 
 + Works as a background task and open new posts in Chrome tabs (Mac OS)
+
++ To start the script: `python monitor_seloger.py`
