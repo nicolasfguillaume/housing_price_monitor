@@ -5,10 +5,11 @@ from bs4 import BeautifulSoup
 import time, datetime
 import os
 import subprocess
+import pandas as pd
 
-URLS = {'seloger': "http://www.seloger.com/list.htm?types=1%2C2&projects=2&sort=d_dt_crea&natures=1%2C2%2C4&price=150000%2F175000&surface=15%2FNaN&places=%5B%7Bcp%3A75%7D%5D&qsVersion=1.0&engine-version=new",
+URLS = {'seloger': "https://www.seloger.com/list.htm?types=1%2C2&projects=2&sort=d_dt_crea&natures=1%2C2%2C4&price=150000%2F175000&surface=15%2FNaN&places=%5B%7Bcp%3A75%7D%5D&qsVersion=1.0&engine-version=new",
 		'pap': "https://www.pap.fr/annonce/vente-appartement-maison-paris-75-g439-jusqu-a-175000-euros-a-partir-de-15-m2",
-		'leboncoin': "https://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/paris/?th=1&ps=6&pe=7"}
+		'leboncoin': "https://www.leboncoin.fr/recherche/?category=9&region=12&departement=75&real_estate_type=2&price=min-175000"}
 
 HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
 	'Accept-Language': 'en-US,en;q=0.8',
@@ -21,28 +22,41 @@ HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
 
 def get_posts(site):
 	response = requests.get(URLS[site], headers=HEADERS, allow_redirects=False)
+
+	if not response.ok:
+		print 'Could not connect to site:', site, ' - Error', response
+
 	soup = BeautifulSoup(response.text, "html5lib")
 
 	if site == 'seloger':
-		posts = [post.find("a", {"class": "link_AB"}).attrs['href'] 
+		posts = [post.find("a", {"class": "c-pa-link link_AB"}).attrs['href'] 
 			 for post in soup.findAll("div", {"class": "c-pa-list c-pa-sl cartouche "})]
 	
 	if site == 'pap':
 		url_pap = 'https://www.pap.fr'
 		posts = [url_pap + post.attrs['href'] for post in soup.findAll("a", {"class": "item-title"})]
 		url_to_discard = ['https://www.pap.fr//vendeur/estimation-gratuite',
-						  'https://www.pap.fr//vendeur/bilan-projet-vente']
-		posts = [posts.remove(url_to_d) for url_to_d in url_to_discard if url_to_d in posts]			 
+						  'https://www.pap.fr//vendeur/bilan-projet-vente',
+						  'https://www.pap.fr/annonceur/passer?produit=vente&itm_source=liste-annonces&itm_campaign=liste-annonces-pa-vente']
+		#posts = [posts.remove(url_to_d) for url_to_d in url_to_discard if url_to_d in posts]	
+		for url_to_d in url_to_discard:
+			if url_to_d in posts:
+				posts.remove(url_to_d)
 
 	if site == 'leboncoin':
-		url_leboncoin = 'https://'
-		posts = [url_leboncoin + post.attrs['href'][2:] 
-		for post in soup.findAll("a", {"class": "list_item clearfix trackable"})]
+		url_leboncoin = 'https://www.leboncoin.fr'
+		posts = [url_leboncoin + post.attrs['href']
+		for post in soup.findAll("a", {"class": "clearfix trackable"})]
 
+	if not posts:
+		print 'Could not parse site:', site
 
 	# compare seulement avec les 10 derniers posts, pour eviter de faire reapparaitre des anciens posts
 	# lorsque des posts recents sont supprimes
-	return set(posts[0:10])
+	if len(posts) > 10:
+		return set(posts[0:10])
+	else:
+		return set(posts)
 
 def browse(urls):
 	for url in urls:
@@ -66,6 +80,12 @@ def monitor_change(posts_old, site):
 		return posts_old
 
 
+def save_all_to_cache(store, posts_old_seloger, posts_old_pap, posts_old_leboncoin):
+		a = pd.DataFrame({'post': list(posts_old_seloger)}).assign(site='seloger')
+		b = pd.DataFrame({'post': list(posts_old_pap)}).assign(site='pap')
+		c = pd.DataFrame({'post': list(posts_old_leboncoin)}).assign(site='leboncoin')
+		store['cache'] = pd.concat([a,b,c], 0)
+
 if __name__ == '__main__':
 
 	print 'Monitoring:', URLS['seloger']
@@ -75,23 +95,36 @@ if __name__ == '__main__':
 	print 'Monitoring:', URLS['leboncoin']
 	posts_old_leboncoin = get_posts(site='leboncoin')
 
-	# store = pd.HDFStore('cache_seloger.h5') 
+	store = pd.HDFStore('cache_seloger.h5') 
+	save_all_to_cache(store, posts_old_seloger, posts_old_pap, posts_old_leboncoin)
 
 	while True:
 
-		try:
-			posts_old_seloger = monitor_change(posts_old_seloger, site='seloger')
-		except:
-			print 'An error occured while checking seloger'
+		store = pd.HDFStore('cache_seloger.h5') 
+		df = store['cache']
 
 		try:
-			posts_old_pap = monitor_change(posts_old_pap, site='pap')
+			site = 'seloger'
+			posts_old_seloger = set(df.loc[df.site == site, 'post'].tolist())
+			posts_old_seloger = monitor_change(posts_old_seloger, site=site)
 		except:
-			print 'An error occured while checking pap'
+			print 'An error occured while checking', site
 
 		try:
-			posts_old_leboncoin = monitor_change(posts_old_leboncoin, site='leboncoin')
+			site = 'pap'
+			posts_old_pap = set(df.loc[df.site == site, 'post'].tolist())
+			posts_old_pap = monitor_change(posts_old_pap, site=site)
 		except:
-			print 'An error occured while checking leboncoin'
+			print 'An error occured while checking', site
+
+		try:
+			site = 'leboncoin'
+			posts_old_leboncoin = set(df.loc[df.site == site, 'post'].tolist())
+			posts_old_leboncoin = monitor_change(posts_old_leboncoin, site=site)
+		except:
+			print 'An error occured while checking', site
+
+		save_all_to_cache(store, posts_old_seloger, posts_old_pap, posts_old_leboncoin)
+		store.close()
 
 		time.sleep(60*5)
