@@ -1,5 +1,7 @@
-# monitor_seloger.com
+# monitor_seloger
 
-Simple scripts that monitors seloger.com : check new posts every 10 min or so
++ Simple scripts that checks new posts every 10 min
 
-Open new posts in new tabs (Mac OS)
++ Works for major French real estate website: seloger.com, leboncoin.com, pap.com
+
++ Works as a background task and open new posts in Chrome tabs (Mac OS)
