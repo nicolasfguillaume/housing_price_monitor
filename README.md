@@ -1,4 +1,4 @@
-# monitor_seloger
+# housing_price_monitor
 
 + Simple script that checks new posts every 5 min
 
