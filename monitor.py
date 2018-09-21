@@ -65,8 +65,7 @@ class Monitor(object):
 		if not posts:
 			print 'Could not parse site:', site
 
-		# compare seulement avec les 10 derniers posts, pour eviter de faire reapparaitre des anciens posts
-		# lorsque des posts recents sont supprimes
+		# compare seulement avec les 10 derniers posts
 		if len(posts) > 10:
 			posts = posts[0:10]
 
@@ -77,20 +76,17 @@ class Monitor(object):
 
 	def save_to_cache(self, posts, site):
 		store = pd.HDFStore('cache.h5') 
-		#print 'save_to_cache', site, type(posts)
 		df = pd.DataFrame({'post': list(posts)}).assign(site=site).assign(city=self.city)
 		if 'cache' not in store:
 			store['cache'] = df
 		else:
-			store['cache'] = pd.concat([store['cache'], df], axis=0).drop_duplicates() #.reset_index()
+			store['cache'] = pd.concat([store['cache'], df], axis=0).drop_duplicates()
 		store.close()
 
 
 	def get_from_cache(self, site):
 		store = pd.HDFStore('cache.h5') 
 		df = store['cache']
-		#print 'get_from_cache', site
-		#print df.site.unique()
 		store.close()
 		return df.loc[(df.site == site) & (df.city == self.city), 'post'].tolist()
 
@@ -104,6 +100,3 @@ class Monitor(object):
 
 			if new_posts:
 				browse(list(new_posts)) 
-
-		# time.sleep(60 * int(self.frequency)) 
-		# self.monitor_change()

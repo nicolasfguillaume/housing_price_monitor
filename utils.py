@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import re 
-from selenium import webdriver  # JS support -- selenium==2.52.0 (doesnt require geckodriver)
+from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 
 def init_driver():
 	firefox_binary = FirefoxBinary(firefox_path="/Applications/Firefox.app/Contents/MacOS/firefox-bin", log_file=None)
 	driver = webdriver.Firefox(firefox_binary=firefox_binary)
-	# driver.set_window_position(1500, 1500)
 	return driver
 
 
@@ -16,10 +15,8 @@ driver = init_driver()
 
 
 def get_page_source_selenium(url):
-	# driver = init_driver()
 	driver.get(url)
 	html_source = driver.page_source
-	# driver.quit()
 	return html_source
 
 
@@ -37,8 +34,7 @@ def parse_seloger(soup, city, ratio_max):
 	prices = []
 	surfaces = []
 
-	#print 'soup.findAll', soup.findAll("div")
-	#print soup.prettify()
+	# print soup.prettify() # DEBUG
 
 	for post in soup.findAll("div", {"class": "c-pa-list c-pa-sl cartouche "}):
 
