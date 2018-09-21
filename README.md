@@ -6,4 +6,8 @@
 
 + Works as a background task and open new posts in Chrome tabs (Mac OS)
 
-+ To start the script: `python main.py`
++ To start the script: 
+```
+pip install -r requirements.txt
+python main.py
+`
