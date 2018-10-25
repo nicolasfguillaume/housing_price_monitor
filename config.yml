@@ -1,7 +1,7 @@
 data: 
 
   - city: 'paris'
-    frequency: 15
+    frequency: 5
     ratio_max: 11000
     urls: 
       seloger: "https://www.seloger.com/list.htm?types=1%2C2&projects=2&enterprise=0&sort=d_dt_crea&natures=1%2C4&price=NaN%2F130000&surface=10%2FNaN&places=%5B%7Bci%3A750056%7D%5D&qsVersion=1.0"
@@ -14,7 +14,7 @@ data:
     urls: 
       seloger: "https://www.seloger.com/list.htm?types=1%2C2&projects=2&enterprise=0&sort=d_dt_crea&natures=1%2C4&price=NaN%2F130000&surface=18%2FNaN&places=%5B%7Bcp%3A92%7D%7C%7Bcp%3A94%7D%5D&qsVersion=1.0"
       pap: "https://www.pap.fr/annonce/vente-appartement-maison-hauts-de-seine-92-g456g458-jusqu-a-125000-euros-a-partir-de-18-m2"
-      leboncoin: "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=92&department_near=1&real_estate_type=1,2,5&price=75000-125000"
+      # leboncoin: "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=92&department_near=1&real_estate_type=1,2,5&price=75000-125000"
 
   # - city: 'paris'
   #   frequency: 10
