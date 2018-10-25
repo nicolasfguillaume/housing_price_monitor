@@ -9,5 +9,5 @@
 + To start the script: 
 ```
 pip install -r requirements.txt
-python main.py
+python main.py --city=paris
 ```
