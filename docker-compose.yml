@@ -1,0 +1,37 @@
+# https://medium.freecodecamp.org/a-recipe-for-website-automated-tests-with-python-selenium-headless-chrome-in-docker-8d344a97afb5
+
+# usage: docker-compose up
+# open browser at localhost:8000
+
+version: '2'
+
+services:
+
+  worker:
+    restart: always
+    build: . 
+    # networks:
+    #   - esnet
+    volumes:
+      - ./:/usr/workspace/
+    command: python worker.py --city=test #paris
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  web:
+    restart: always
+    depends_on:
+      - worker
+    build: . 
+    # networks:
+    #   - esnet
+    volumes:
+      - ./:/usr/workspace/
+    ports:
+      - '8000:5000'
+    command: python run_app.py
+    environment:
+      - PYTHONUNBUFFERED=1
+
+# networks:
+#   esnet:

@@ -2,16 +2,30 @@
 import os
 import re 
 from selenium import webdriver
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+import requests
+
+BROWSER = 'chrome'
 
 
-def init_driver():
-	firefox_binary = FirefoxBinary(firefox_path="/Applications/Firefox.app/Contents/MacOS/firefox-bin", log_file=None)
-	driver = webdriver.Firefox(firefox_binary=firefox_binary)
+def init_driver(browser='firefox'):
+
+	if browser == 'firefox':
+		from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+		firefox_binary = FirefoxBinary(firefox_path="/Applications/Firefox.app/Contents/MacOS/firefox-bin", log_file=None)
+		driver = webdriver.Firefox(firefox_binary=firefox_binary)
+	
+	elif browser == 'chrome':
+		chrome_options = webdriver.ChromeOptions()
+		chrome_options.add_argument('--no-sandbox')
+		chrome_options.add_argument('--window-size=1420,1080')
+		chrome_options.add_argument('--headless')
+		chrome_options.add_argument('--disable-gpu')
+		driver = webdriver.Chrome(chrome_options=chrome_options)
+
 	return driver
 
 
-driver = init_driver()
+driver = init_driver(browser=BROWSER)
 
 
 def get_page_source_selenium(url):
@@ -21,8 +35,14 @@ def get_page_source_selenium(url):
 
 
 def browse(urls):
-	for url in urls:
-		os.system("open {}".format(url))
+	if BROWSER == 'firefox':
+		for url in urls:
+			os.system("open {}".format(url))
+
+	elif BROWSER == 'chrome':
+		for url in urls:
+			with open('to_open_in_browser.csv', 'a') as f:
+				f.write(url + "\n")
 
 
 def keep_only_numeric(val):
@@ -40,7 +60,9 @@ def parse_seloger(soup, city, ratio_max):
 
 		link = post.find("a", {"class": "c-pa-link link_AB"}).attrs['href'] 
 		surface = post.find("div", {"class": "c-pa-criterion"})
-		surface = surface.find_all("em")[1]
+		surface = surface.find_all("em")
+		if surface:
+			surface = surface[1]
 		price = post.find("div", {"class": "c-pa-price"})
 		price = price.find("span", {"class": "c-pa-cprice"})
 

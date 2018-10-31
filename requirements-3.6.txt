@@ -1,0 +1,16 @@
+beautifulsoup4
+bs4
+certifi
+chardet
+idna
+numexpr
+numpy
+pandas
+python-dateutil
+pytz
+PyYAML
+requests
+selenium==2.52.0
+six
+tables
+urllib3

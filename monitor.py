@@ -29,7 +29,7 @@ class Monitor(object):
 
 	def init_posts(self):
 		for site in self.urls:
-			print '[INFO] Monitoring:', self.urls[site]
+			print('[INFO] Monitoring: ' + self.urls[site])
 			self.posts[site] = set(self.check_posts(site))
 			self.save_to_cache(list(self.posts[site]), site)
 
@@ -43,10 +43,10 @@ class Monitor(object):
 		try:
 			response = requests.get(self.urls[site], headers=HEADERS, allow_redirects=True)
 			if not response.ok:
-				print '[ERROR] Could not connect to site:', site, ' - ', self.response
+				print('[ERROR] Could not connect to site: ' + site, ' - ' + self.response)
 			return response.text
 		except:
-			print '[ERROR] Could not connect to site:', site
+			print('[ERROR] Could not connect to site: ' + site)
 			return None
 
 
@@ -66,7 +66,7 @@ class Monitor(object):
 			posts = parse_leboncoin(soup, self.city, self.ratio_max)
 
 		if not posts:
-			print '[ERROR] Could not parse site:', site
+			print('[ERROR] Could not parse site: ' + site)
 
 		# compare seulement avec les 10 derniers posts
 		if len(posts) > 10:
@@ -99,7 +99,7 @@ class Monitor(object):
 			posts_old = set(self.get_from_cache(site))
 			posts = set(self.check_posts(site))
 			new_posts = posts - posts_old
-			print '[INFO]',len(new_posts), 'new post(s) on', site, 'for', self.city, '(' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ')'
+			print('[INFO] ' + str(len(new_posts)) + ' new post(s) on ' + site + ' for ' + self.city + ' (' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ')')
 
 			if new_posts:
 				browse(list(new_posts)) 
