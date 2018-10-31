@@ -6,8 +6,9 @@
 
 + Works as a background task and open new posts in Chrome tabs (Mac OS)
 
-+ To start the script: 
++ To start the app: 
 ```
-pip install -r requirements.txt
-python main.py --city=paris
+docker-compose up
 ```
+
+then open a browser at `localhost:8000`
