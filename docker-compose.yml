@@ -3,6 +3,9 @@
 # usage: docker-compose up
 # open browser at localhost:8000
 
+# monitoring
+# docker stats housingpricemonitor_web_1 housingpricemonitor_worker_1 housingpricemonitor_mongo_1
+
 version: '2'
 
 services:
@@ -10,11 +13,9 @@ services:
   worker:
     restart: always
     build: . 
-    # networks:
-    #   - esnet
     volumes:
       - ./:/usr/workspace/
-    command: python worker.py --city=test #paris
+    command: python worker.py --city=paris
     environment:
       - PYTHONUNBUFFERED=1
 
@@ -23,8 +24,6 @@ services:
     depends_on:
       - worker
     build: . 
-    # networks:
-    #   - esnet
     volumes:
       - ./:/usr/workspace/
     ports:
@@ -33,5 +32,6 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
-# networks:
-#   esnet:
+  mongodb:
+    restart: always
+    image: mongo:3.4.6

@@ -3,8 +3,13 @@ import os
 import re 
 from selenium import webdriver
 import requests
+from pymongo import MongoClient
 
 BROWSER = 'chrome'
+
+
+client = MongoClient('mongodb://mongodb:27017/')
+db = client.house
 
 
 def init_driver(browser='firefox'):
@@ -20,7 +25,28 @@ def init_driver(browser='firefox'):
 		chrome_options.add_argument('--window-size=1420,1080')
 		chrome_options.add_argument('--headless')
 		chrome_options.add_argument('--disable-gpu')
+		chrome_options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"')
 		driver = webdriver.Chrome(chrome_options=chrome_options)
+
+	def whatismybrowser(driver):
+		from bs4 import BeautifulSoup
+		print('[INFO] Info about the browser:')
+		driver.get("https://www.whatismybrowser.com")
+		html_source = driver.page_source
+		soup = BeautifulSoup(html_source, 'html.parser')
+		res = soup.findAll("div", {"class": "readout content"})
+		for r in res:
+			print(r)
+
+		print('[INFO] Info about the headers:')
+		driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
+		html_source = driver.page_source
+		soup = BeautifulSoup(html_source, 'html.parser')
+		res = soup.findAll("div", {"class": "content"})
+		print(res)
+
+	# DEBUG
+	# whatismybrowser(driver)
 
 	return driver
 
@@ -30,8 +56,25 @@ driver = init_driver(browser=BROWSER)
 
 def get_page_source_selenium(url):
 	driver.get(url)
-	html_source = driver.page_source
-	return html_source
+
+	# TEST
+	# https://selenium-python.readthedocs.io/waits.html
+	# from selenium.webdriver.common.by import By
+	# from selenium.webdriver.support.ui import WebDriverWait
+	# from selenium.webdriver.support import expected_conditions as EC
+	# wait 5 sec
+	# print('[INFO] webdriver waiting for 10 sec')
+	# element = WebDriverWait(driver, 10).until(
+ 	#        EC.presence_of_element_located((By.CLASS_NAME, "c-header-module-opener-text c-ep-opener-text"))
+ 	#    )
+
+ 	# DEBUG
+	# import time
+	# time.sleep(10)
+	print('[INFO] cartouche in html source (seloger): ', 'cartouche' in driver.page_source)
+	# print('cartouche' in driver.page_source)
+
+	return driver.page_source
 
 
 def browse(urls):
@@ -41,8 +84,11 @@ def browse(urls):
 
 	elif BROWSER == 'chrome':
 		for url in urls:
-			with open('to_open_in_browser.csv', 'a') as f:
-				f.write(url + "\n")
+			item = {'url': url}
+			db.urls.insert_one(item)
+			print('[INFO] Inserted: ' + str(item))
+			# with open('to_open_in_browser.csv', 'a') as f:
+			# 	f.write(url + "\n")
 
 
 def keep_only_numeric(val):
@@ -54,7 +100,14 @@ def parse_seloger(soup, city, ratio_max):
 	prices = []
 	surfaces = []
 
-	# print soup.prettify() # DEBUG
+	# DEBUG
+	# debug = soup.prettify()[53000:57000]
+	# print(debug)
+	# print('cartouche in debug:')
+	# print('cartouche' in debug)
+	# print('persoModuleContent in debug:')
+	# print('persoModuleContent' in debug)
+
 
 	for post in soup.findAll("div", {"class": "c-pa-list c-pa-sl cartouche "}):
 

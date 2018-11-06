@@ -4,9 +4,12 @@ import csv
 import os
 import os.path
 from flask import Flask, render_template, jsonify, request
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
+client = MongoClient('mongodb://mongodb:27017/')
+db = client.house
 
 @app.route('/')
 def index():
@@ -19,7 +22,7 @@ def index():
 					success:function(data)
 					{
 						//console.log the response
-						console.log(data);
+						//console.log(data);
 
 						if (data) {
 						    var i;
@@ -28,10 +31,10 @@ def index():
 							}
 						}
 
-						//Send another request in 30 seconds.
+						//Send another request in 60 seconds.
 						setTimeout(function(){
 							send();
-						}, 30000);
+						}, 60 * 1000);
 					}
 				});
 			}
@@ -41,23 +44,35 @@ def index():
 	return """<head>
 				<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 			  </head>
-				Polling
+				Polling...
 				<script>{}</script>""".format(code)
 
 
 @app.route('/api', methods = ['GET', 'POST'])
 def api():
-	file_path = 'to_open_in_browser.csv'
-	
-	if not os.path.exists(file_path):
+	# file_path = 'to_open_in_browser.csv'
+
+	cursor = db.urls.find()
+	urls = [c['url'] for c in cursor]
+
+	if len(urls) == 0:
 		return jsonify({})
 
-	with open(file_path, 'r') as f:
-		urls = csv.reader(f)
-		url = [item[0] for item in urls]
+	db.urls.remove({})
+
+	return jsonify(urls)
+
+	
+	# if not os.path.exists(file_path):
+	# 	return jsonify({})
+
+	# with open(file_path, 'r') as f:
+	# 	urls = csv.reader(f)
+	# 	url = [item[0] for item in urls]
+
 	# os.remove(file_path)
 
-	return jsonify(url)
+	# return jsonify(url)
 
 
 if __name__ == '__main__':

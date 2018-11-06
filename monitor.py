@@ -56,7 +56,9 @@ class Monitor(object):
 		else:
 			html_source = self.get_page_source(site)
 
-		soup = BeautifulSoup(html_source, 'html.parser') #"html5lib")
+		soup = BeautifulSoup(html_source, 'html.parser')
+		# soup = BeautifulSoup(html_source, 'lxml')
+		# soup = BeautifulSoup(html_source, 'html5lib')
 
 		if site == 'seloger':
 			posts = parse_seloger(soup, self.city, self.ratio_max)
