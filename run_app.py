@@ -90,7 +90,7 @@ def api():
 @app.route('/last')
 def last():
 	cursor = db.last_check.find()
-	items = [c['site'] + ' - ' + c['date'] for c in cursor]
+	items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'] for c in cursor]
 
 	if len(items) == 0:
 		return jsonify({})

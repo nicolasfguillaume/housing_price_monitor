@@ -15,7 +15,8 @@ services:
     build: . 
     volumes:
       - ./:/usr/workspace/
-    command: python worker.py --city=paris
+    # command: python worker.py --city=paris
+    command: python worker.py
     environment:
       - PYTHONUNBUFFERED=1
 
