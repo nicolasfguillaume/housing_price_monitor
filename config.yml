@@ -1,6 +1,6 @@
 data: 
 
-  - city: 'paris'
+  - city: paris
     frequency: 5
     ratio_max: 11000
     urls: 
@@ -8,10 +8,16 @@ data:
       pap: "https://www.pap.fr/annonce/vente-appartement-maison-paris-75-g439-jusqu-a-125000-euros-a-partir-de-9-m2"
       leboncoin: "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=75&real_estate_type=1,2,3,5&price=min-125000"
 
-  - city: 'idf'
+  - city: idf
     frequency: 15
     ratio_max: 9000
     urls: 
       seloger: "https://www.seloger.com/list.htm?types=1%2C2&projects=2&enterprise=0&sort=d_dt_crea&natures=1%2C4&price=NaN%2F130000&surface=18%2FNaN&places=%5B%7Bcp%3A92%7D%7C%7Bcp%3A94%7D%5D&qsVersion=1.0"
       pap: "https://www.pap.fr/annonce/vente-appartement-maison-hauts-de-seine-92-g456g458-jusqu-a-125000-euros-a-partir-de-18-m2"
       # leboncoin: "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=92&department_near=1&real_estate_type=1,2,5&price=75000-125000"
+
+  - city: location
+    frequency: 5
+    urls: 
+      pap: "https://www.pap.fr/annonce/location-appartement-maison-ile-de-france-g471"
+      leboncoin: "https://www.leboncoin.fr/locations/offres/ile_de_france/paris/"

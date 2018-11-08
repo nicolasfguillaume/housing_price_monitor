@@ -5,7 +5,7 @@ import time
 import datetime
 import pandas as pd
 
-from utils import parse_seloger, parse_pap, parse_leboncoin, get_page_source_selenium, browse
+from utils import parse_seloger, parse_pap, parse_leboncoin, get_page_source_selenium, browse, save_last_check
 
 HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
 		'Accept-Language': 'en-US,en;q=0.8',
@@ -20,10 +20,10 @@ class Monitor(object):
 
 	def __init__(self, ctx):
 		self.ctx = ctx
-		self.city = ctx['city']
-		self.frequency = ctx['frequency']
-		self.ratio_max = ctx['ratio_max']
-		self.urls = ctx['urls']
+		self.city = ctx.get('city')
+		self.frequency = ctx.get('frequency')
+		self.ratio_max = ctx.get('ratio_max')
+		self.urls = ctx.get('urls')
 		self.posts = {}
 
 
@@ -56,16 +56,21 @@ class Monitor(object):
 		else:
 			html_source = self.get_page_source(site)
 
-		soup = BeautifulSoup(html_source, 'html.parser')
-		# soup = BeautifulSoup(html_source, 'lxml')
-		# soup = BeautifulSoup(html_source, 'html5lib')
+		#try:
+		if True:
+			soup = BeautifulSoup(html_source, 'html.parser')
+			# soup = BeautifulSoup(html_source, 'lxml')
+			# soup = BeautifulSoup(html_source, 'html5lib')
 
-		if site == 'seloger':
-			posts = parse_seloger(soup, self.city, self.ratio_max)
-		if site == 'pap':
-			posts = parse_pap(soup, self.city, self.ratio_max)
-		if site == 'leboncoin':
-			posts = parse_leboncoin(soup, self.city, self.ratio_max)
+			if site == 'seloger':
+				posts = parse_seloger(soup, self.city, self.ratio_max)
+			if site == 'pap':
+				posts = parse_pap(soup, self.city, self.ratio_max)
+			if site == 'leboncoin':
+				posts = parse_leboncoin(soup, self.city, self.ratio_max)
+		# except:
+		# 	print('[ERROR] BeautifulSoup Error - Could not parse site: ' + site)
+		# 	posts = []
 
 		if not posts:
 			print('[ERROR] Could not parse site: ' + site)
@@ -102,6 +107,8 @@ class Monitor(object):
 			posts = set(self.check_posts(site))
 			new_posts = posts - posts_old
 			print('[INFO] ' + str(len(new_posts)) + ' new post(s) on ' + site + ' for ' + self.city + ' (' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ')')
+
+			save_last_check(self.city, site)
 
 			if new_posts:
 				browse(list(new_posts)) 

@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import csv
+import yaml
 import os
 import os.path
 from flask import Flask, render_template, jsonify, request
@@ -11,19 +12,19 @@ app = Flask(__name__)
 client = MongoClient('mongodb://mongodb:27017/')
 db = client.house
 
+with open("config.yml", 'r') as f:
+	config = yaml.load(f)
+
 @app.route('/')
 def index():
 
-	code = """ 
-			function send(){
+	code_check_api = """ 
+			function check_api(){
 				$.ajax({
 					type: "get",
-					url: "http://localhost:8000/api",
+					url: "/api",
 					success:function(data)
 					{
-						//console.log the response
-						//console.log(data);
-
 						if (data) {
 						    var i;
 							for (i = 0; i < data.length; i++) {
@@ -33,25 +34,48 @@ def index():
 
 						//Send another request in 60 seconds.
 						setTimeout(function(){
-							send();
+							check_api();
 						}, 60 * 1000);
 					}
 				});
 			}
-			send();
+			check_api();
+	"""
+
+	code_check_last = """ 
+			function check_last(){
+				$.ajax({
+					type: "get",
+					url: "/last",
+					success:function(data)
+					{
+						if (data) {
+						    var i;
+							for (i = 0; i < data.length; i++) {
+							    console.log(data[i]);
+							}
+						}
+
+						//Send another request in 60 seconds.
+						setTimeout(function(){
+							check_last();
+						}, 60 * 1000);
+					}
+				});
+			}
+			check_last();
 	"""
 
 	return """<head>
 				<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 			  </head>
-				Polling...
-				<script>{}</script>""".format(code)
+			    {0}
+				<script>{1}</script>
+		   """.format(str(config['data']), code_check_api + code_check_last)
 
 
-@app.route('/api', methods = ['GET', 'POST'])
+@app.route('/api')
 def api():
-	# file_path = 'to_open_in_browser.csv'
-
 	cursor = db.urls.find()
 	urls = [c['url'] for c in cursor]
 
@@ -62,17 +86,18 @@ def api():
 
 	return jsonify(urls)
 
-	
-	# if not os.path.exists(file_path):
-	# 	return jsonify({})
 
-	# with open(file_path, 'r') as f:
-	# 	urls = csv.reader(f)
-	# 	url = [item[0] for item in urls]
+@app.route('/last')
+def last():
+	cursor = db.last_check.find()
+	items = [c['site'] + ' - ' + c['date'] for c in cursor]
 
-	# os.remove(file_path)
+	if len(items) == 0:
+		return jsonify({})
 
-	# return jsonify(url)
+	# db.last_check.remove({})
+
+	return jsonify(items)
 
 
 if __name__ == '__main__':

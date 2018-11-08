@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re 
+import datetime
 from selenium import webdriver
 import requests
 from pymongo import MongoClient
@@ -69,10 +70,7 @@ def get_page_source_selenium(url):
  	#    )
 
  	# DEBUG
-	# import time
-	# time.sleep(10)
-	print('[INFO] cartouche in html source (seloger): ', 'cartouche' in driver.page_source)
-	# print('cartouche' in driver.page_source)
+	# print('[INFO] cartouche in html source (seloger): ', 'cartouche' in driver.page_source)
 
 	return driver.page_source
 
@@ -87,8 +85,13 @@ def browse(urls):
 			item = {'url': url}
 			db.urls.insert_one(item)
 			print('[INFO] Inserted: ' + str(item))
-			# with open('to_open_in_browser.csv', 'a') as f:
-			# 	f.write(url + "\n")
+
+
+def save_last_check(city, site):
+	item = {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+			'city': city,
+			'site': site}
+	db.last_check.insert_one(item)
 
 
 def keep_only_numeric(val):
@@ -136,6 +139,7 @@ def parse_seloger(soup, city, ratio_max):
 
 
 def parse_pap(soup, city, ratio_max):
+	"""pour annonces de ventes immo et locations""" 
 	url_pap = 'https://www.pap.fr'
 
 	posts = []
@@ -158,8 +162,12 @@ def parse_pap(soup, city, ratio_max):
 			surfaces.append(surface)
 		if price and surface:
 			ratio = float(price) / float(surface)
+
+		if ratio_max:
 			if ratio <= ratio_max:
 				posts.append(link)
+		else:
+			posts.append(link)
 
 	url_to_discard = ['https://www.pap.fr//vendeur/estimation-gratuite',
 					  'https://www.pap.fr//vendeur/bilan-projet-vente',
@@ -173,6 +181,7 @@ def parse_pap(soup, city, ratio_max):
 
 
 def parse_leboncoin(soup, city, ratio_max):
+	"""pour annonces de ventes immo et locations""" 
 	url_leboncoin = 'https://www.leboncoin.fr'
 
 	posts = [url_leboncoin + post.attrs['href']

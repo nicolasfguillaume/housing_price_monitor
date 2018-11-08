@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 import yaml
-# import time
 import argparse
 import threading
-
 from monitor import Monitor
 
-# doc: python worker.py --city=paris
 
 if __name__ == '__main__':
 
@@ -29,7 +26,3 @@ if __name__ == '__main__':
 		paris.monitor_change()
 
 	callback()
-	
-	# while True:	
-	# 	paris.monitor_change()
-	# 	time.sleep(60 * city_data['frequency'])
