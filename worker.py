@@ -15,29 +15,26 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	search_data = config['data']
-	# city_data = [item for item in city_data if item['city'] == args.city][0]
-
 	searches = [item['city'] for item in search_data]
 	print('[INFO] Searches: ', searches)
 
-	# TODO : a generaliser
-	search_0_data = [item for item in search_data if item['city'] == searches[0]][0]
-	search_1_data = [item for item in search_data if item['city'] == searches[1]][0]
-	# search_2_data = [item for item in search_data if item['city'] == searches[2]][0]
+	# search_0_data = [item for item in search_data if item['city'] == searches[0]][0]
+	# search_1_data = [item for item in search_data if item['city'] == searches[1]][0]
+	search_data = {searches[i]: [item for item in search_data if item['city'] == searches[i]][0] for i in range(len(searches))}
 
-	search_0 = Monitor(search_0_data)
-	search_1 = Monitor(search_1_data)
-	# search_2 = Monitor(search_2_data)
-
-	search_0.init_posts()
-	search_1.init_posts()
-	# search_2.init_posts()
+	# search_0 = Monitor(search_data['paris'])
+	# search_0 = Monitor(search_0_data)
+	# search_1 = Monitor(search_data['idf'])
+	# search_1 = Monitor(search_1_data)
+	search = {idx: Monitor(search_data[idx]) for idx in searches}
 
 	def callback():
-		threading.Timer(60 * search_0_data['frequency'], callback).start()
-		search_0.monitor_change()
-		search_1.monitor_change()
-		# search_2.monitor_change()
+		threading.Timer(60 * search_data['paris']['frequency'], callback).start()
+		
+		# search_0.monitor_change()
+		# search_1.monitor_change()
+		for idx in searches:
+			search[idx].monitor_change()
 
 	callback()
 

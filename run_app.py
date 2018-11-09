@@ -87,15 +87,20 @@ def api():
 	return jsonify(urls)
 
 
+@app.route('/clean')
+def clean():
+	db.urls.remove({})
+
+	return jsonify({'status': 'ok'})
+
+
 @app.route('/last')
 def last():
 	cursor = db.last_check.find()
 	items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'] for c in cursor]
 
-	if len(items) == 0:
-		return jsonify({})
-
-	# db.last_check.remove({})
+	# if len(items) == 0:
+	# 	return jsonify({})
 
 	return jsonify(items)
 

@@ -27,7 +27,7 @@ class Monitor(object):
 		self.posts = {}
 
 
-	def init_posts(self):
+	# def init_posts(self):
 		for site in self.urls:
 			print('[INFO] Monitoring: ' + self.urls[site])
 			self.posts[site] = set(self.check_posts(site))

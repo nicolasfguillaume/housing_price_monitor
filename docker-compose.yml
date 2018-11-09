@@ -1,7 +1,7 @@
 # https://medium.freecodecamp.org/a-recipe-for-website-automated-tests-with-python-selenium-headless-chrome-in-docker-8d344a97afb5
 
 # usage: docker-compose up
-# open browser at localhost:8000
+# open browser at localhost:600
 
 # monitoring
 # docker stats housingpricemonitor_web_1 housingpricemonitor_worker_1 housingpricemonitor_mongo_1
@@ -15,7 +15,6 @@ services:
     build: . 
     volumes:
       - ./:/usr/workspace/
-    # command: python worker.py --city=paris
     command: python worker.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -28,7 +27,7 @@ services:
     volumes:
       - ./:/usr/workspace/
     ports:
-      - '8000:5000'
+      - '600:5000'
     command: python run_app.py
     environment:
       - PYTHONUNBUFFERED=1
