@@ -11,4 +11,4 @@
 docker-compose up
 ```
 
-then open a browser at `localhost:8000`
+then open a browser at `localhost:600`
