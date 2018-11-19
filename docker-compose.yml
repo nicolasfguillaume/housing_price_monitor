@@ -5,6 +5,16 @@
 
 # monitoring
 # docker stats housingpricemonitor_web_1 housingpricemonitor_worker_1 housingpricemonitor_mongo_1
+# see internal ip addresses
+# docker inspect housingpricemonitor_worker_1
+
+# https://stackoverflow.com/questions/27937185/assign-static-ip-to-docker-container
+# avant network
+# "Gateway": "172.18.0.1",
+# "IPAddress": "172.18.0.3",
+# apres network
+# "Gateway": "172.20.5.0",
+# "IPAddress": "172.20.128.2",
 
 version: '2'
 
@@ -18,6 +28,9 @@ services:
     command: python worker.py
     environment:
       - PYTHONUNBUFFERED=1
+    # networks:
+    #   static-network:
+    #     ipv4_address: 172.20.128.2  # internal ip address of container (static)
 
   web:
     restart: always
@@ -35,3 +48,10 @@ services:
   mongodb:
     restart: always
     image: mongo:3.4.6
+
+# networks:
+#   static-network:
+#     ipam:
+#       config:
+#         - subnet: 172.20.0.0/16
+#           ip_range: 172.28.5.0/24

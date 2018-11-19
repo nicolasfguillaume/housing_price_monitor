@@ -2,11 +2,17 @@
 import os
 import re 
 import datetime
+import yaml
 from selenium import webdriver
 import requests
 from pymongo import MongoClient
 
-BROWSER = 'chrome'
+# TODO
+# https://intoli.com/blog/making-chrome-headless-undetectable/
+
+# BROWSER = 'chrome'
+# open browser and type in console: window.navigator.userAgent
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
 
 
 client = MongoClient('mongodb://mongodb:27017/')
@@ -14,6 +20,8 @@ db = client.house
 
 
 def init_driver(browser='firefox'):
+
+	assert browser in ['firefox', 'chrome']
 
 	if browser == 'firefox':
 		from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -25,32 +33,62 @@ def init_driver(browser='firefox'):
 		chrome_options.add_argument('--no-sandbox')
 		chrome_options.add_argument('--window-size=1420,1080')
 		chrome_options.add_argument('--headless')
+		# chrome_options.add_argument("--start-maximized")
+		# chrome_options.add_argument("--disable-notifications")
 		chrome_options.add_argument('--disable-gpu')
+		chrome_options.add_argument("--incognito")
+		chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'fr'})
+		# chrome_options.add_argument('--accept-language="en-US,en;q=0.8"')  
 		chrome_options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"')
 		driver = webdriver.Chrome(chrome_options=chrome_options)
 
 	def whatismybrowser(driver):
 		from bs4 import BeautifulSoup
-		print('[INFO] Info about the browser:')
-		driver.get("https://www.whatismybrowser.com")
-		html_source = driver.page_source
-		soup = BeautifulSoup(html_source, 'html.parser')
-		res = soup.findAll("div", {"class": "readout content"})
-		for r in res:
-			print(r)
+		# print('[INFO] Info about the browser:')
+		# driver.get("https://www.whatismybrowser.com")
+		# html_source = driver.page_source
+		# soup = BeautifulSoup(html_source, 'html.parser')
+		# res = soup.findAll("div", {"class": "readout content"})
+		# for r in res:
+		# 	print(r)
 
 		print('[INFO] Info about the headers:')
-		driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
+		# driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
+		driver.get("https://httpbin.org/headers")
 		html_source = driver.page_source
-		soup = BeautifulSoup(html_source, 'html.parser')
-		res = soup.findAll("div", {"class": "content"})
-		print(res)
+		# soup = BeautifulSoup(html_source, 'html.parser')
+		# res = soup.findAll("div", {"class": "content"})
+		# print(res)
+		print(html_source)
+
+		print('[INFO] Info about the cookies:')
+		# driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
+		driver.get("https://httpbin.org/cookies")
+		html_source = driver.page_source
+		# soup = BeautifulSoup(html_source, 'html.parser')
+		# res = soup.findAll("div", {"class": "content"})
+		# print(res)
+		print(html_source)
 
 	# DEBUG
-	# whatismybrowser(driver)
+	if browser == 'chrome':
+		from inject import inject_js_with_driver
+		inject_js_with_driver(driver)
+		whatismybrowser(driver)
+
+		r = driver.execute_script('return window.navigator.languages')
+		print(r)
 
 	return driver
 
+
+# TODO : refactor !!
+with open("config.yml", 'r') as f:
+	config = yaml.load(f)
+search_data = config['data']
+searches = [item['city'] for item in search_data]
+search_data = {searches[i]: [item for item in search_data if item['city'] == searches[i]][0] for i in range(len(searches))}
+BROWSER = search_data['paris']['browser']
 
 driver = init_driver(browser=BROWSER)
 
@@ -75,14 +113,14 @@ def get_page_source_selenium(url):
 	return driver.page_source
 
 
-def browse(urls):
+def browse(urls, city):
 	if BROWSER == 'firefox':
 		for url in urls:
 			os.system("open {}".format(url))
 
 	elif BROWSER == 'chrome':
 		for url in urls:
-			item = {'url': url}
+			item = {'url': url, 'city': city}
 			db.urls.insert_one(item)
 			print('[INFO] Inserted: ' + str(item))
 
@@ -110,7 +148,6 @@ def parse_seloger(soup, city, ratio_max):
 	# print('cartouche' in debug)
 	# print('persoModuleContent in debug:')
 	# print('persoModuleContent' in debug)
-
 
 	for post in soup.findAll("div", {"class": "c-pa-list c-pa-sl cartouche "}):
 
@@ -149,6 +186,15 @@ def parse_pap(soup, city, ratio_max):
 	for post in soup.findAll("a", {"class": "item-title"}):
 
 		link = url_pap + post.attrs['href']
+
+		# TODO refactor
+		if 'adtech.de/adlink' in link:
+			continue
+		if 'vendeur/estimation-gratuite' in link:
+			continue
+		if 'immoneuf.com/programme' in link:
+			continue
+
 		price = post.find("span", {"class": "item-price"})
 		surface = post.find("span", {"class": "h1"})
 

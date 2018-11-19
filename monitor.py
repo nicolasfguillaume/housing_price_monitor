@@ -7,14 +7,14 @@ import pandas as pd
 
 from utils import parse_seloger, parse_pap, parse_leboncoin, get_page_source_selenium, browse, save_last_check
 
-HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
-		'Accept-Language': 'en-US,en;q=0.8',
-		'Upgrade-Insecure-Requests': '1',
-		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106  Safari/537.36',
-		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-		'Cache-Control': 'max-age=0',
-		'Connection': 'keep-alive',
-		  }
+# HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
+# 		'Accept-Language': 'en-US,en;q=0.8',
+# 		'Upgrade-Insecure-Requests': '1',
+# 		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106  Safari/537.36',
+# 		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+# 		'Cache-Control': 'max-age=0',
+# 		'Connection': 'keep-alive',
+# 		  }
 
 class Monitor(object):
 
@@ -22,12 +22,11 @@ class Monitor(object):
 		self.ctx = ctx
 		self.city = ctx.get('city')
 		self.frequency = ctx.get('frequency')
+		self.browser = ctx.get('browser')
 		self.ratio_max = ctx.get('ratio_max')
 		self.urls = ctx.get('urls')
 		self.posts = {}
 
-
-	# def init_posts(self):
 		for site in self.urls:
 			print('[INFO] Monitoring: ' + self.urls[site])
 			self.posts[site] = set(self.check_posts(site))
@@ -51,13 +50,15 @@ class Monitor(object):
 
 
 	def check_posts(self, site):
-		if site == 'seloger':
-			html_source = get_page_source_selenium(self.urls[site])
-		else:
-			html_source = self.get_page_source(site)
+		# if site == 'seloger':
+		html_source = get_page_source_selenium(self.urls[site])
+		# else:
+		# 	html_source = self.get_page_source(site)
 
-		#try:
-		if True:
+		# if site == 'leboncoin':
+		# 	print(html_source)
+
+		try:
 			soup = BeautifulSoup(html_source, 'html.parser')
 			# soup = BeautifulSoup(html_source, 'lxml')
 			# soup = BeautifulSoup(html_source, 'html5lib')
@@ -68,9 +69,9 @@ class Monitor(object):
 				posts = parse_pap(soup, self.city, self.ratio_max)
 			if site == 'leboncoin':
 				posts = parse_leboncoin(soup, self.city, self.ratio_max)
-		# except:
-		# 	print('[ERROR] BeautifulSoup Error - Could not parse site: ' + site)
-		# 	posts = []
+		except:
+			print('[ERROR] BeautifulSoup Error - Could not parse site: ' + site)
+			posts = []
 
 		if not posts:
 			print('[ERROR] Could not parse site: ' + site)
@@ -111,4 +112,4 @@ class Monitor(object):
 			save_last_check(self.city, site)
 
 			if new_posts:
-				browse(list(new_posts)) 
+				browse(list(new_posts), self.city) 

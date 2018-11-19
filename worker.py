@@ -1,38 +1,26 @@
 # -*- coding: utf-8 -*-
 import yaml
-import argparse
 import threading
 from monitor import Monitor
-
 
 if __name__ == '__main__':
 
 	with open("config.yml", 'r') as f:
 		config = yaml.load(f)
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--city', metavar='city', type=str, help='city')
-	args = parser.parse_args()
-
 	search_data = config['data']
 	searches = [item['city'] for item in search_data]
 	print('[INFO] Searches: ', searches)
 
-	# search_0_data = [item for item in search_data if item['city'] == searches[0]][0]
-	# search_1_data = [item for item in search_data if item['city'] == searches[1]][0]
 	search_data = {searches[i]: [item for item in search_data if item['city'] == searches[i]][0] for i in range(len(searches))}
-
-	# search_0 = Monitor(search_data['paris'])
-	# search_0 = Monitor(search_0_data)
-	# search_1 = Monitor(search_data['idf'])
-	# search_1 = Monitor(search_1_data)
 	search = {idx: Monitor(search_data[idx]) for idx in searches}
 
 	def callback():
-		threading.Timer(60 * search_data['paris']['frequency'], callback).start()
-		
-		# search_0.monitor_change()
-		# search_1.monitor_change()
+		# threading.Timer(60 * search_data['paris']['frequency'], callback).start()
+		import random
+		wait_time = random.randint(4,7) # between 4 and 6 min
+		threading.Timer(60 * wait_time, callback).start()
+
 		for idx in searches:
 			search[idx].monitor_change()
 
