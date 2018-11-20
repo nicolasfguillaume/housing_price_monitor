@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import csv
+import datetime
 import yaml
 import os
 import os.path
@@ -65,6 +66,11 @@ def index(city):
 							}}
 						}}
 
+						$('#p_last_check').html('<p style="background-color:red;">Error</p>')
+						if (data.length > 0) {{		
+						    $('#p_last_check').html('<p style="background-color:green;">Running...</p>')
+						}}
+
 						//Send another request in 60 seconds.
 						setTimeout(function(){{
 							check_last();
@@ -81,6 +87,7 @@ def index(city):
 				<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 			  </head>
 			    {0}
+			    <br><p id="p_last_check"></p>
 				<script>{1}</script>
 		   """.format(str(search_city), code_check_api + code_check_last)
 
@@ -107,8 +114,10 @@ def clean(city):
 
 @app.route('/last/<city>')
 def last(city):
-	cursor = db.last_check.find({'city': city})
-	items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'] for c in cursor]
+	d = datetime.datetime.now() - datetime.timedelta(minutes=10)
+	# retourne les 10 dernieres min
+	cursor = db.last_check.find({'city': city, "date": {"$gt": d}}).sort("date")
+	items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'].strftime("%Y-%m-%d %H:%M") for c in cursor]
 
 	return jsonify(items)
 

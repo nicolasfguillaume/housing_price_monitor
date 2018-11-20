@@ -126,7 +126,8 @@ def browse(urls, city):
 
 
 def save_last_check(city, site):
-	item = {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+	item = {#'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+	        'date': datetime.datetime.now(),
 			'city': city,
 			'site': site}
 	db.last_check.insert_one(item)
