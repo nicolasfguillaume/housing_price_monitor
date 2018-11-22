@@ -5,7 +5,8 @@ import time
 import datetime
 import pandas as pd
 
-from utils import parse_seloger, parse_pap, parse_leboncoin, get_page_source_selenium, browse, save_last_check
+from utils import get_page_source_selenium, browse, save_last_check, insert_to_mongo, configure_logger
+from parsers import parse_seloger, parse_pap, parse_leboncoin
 
 # HEADERS = {'Accept-Encoding': 'gzip, deflate, sdch',
 # 		'Accept-Language': 'en-US,en;q=0.8',
@@ -15,6 +16,8 @@ from utils import parse_seloger, parse_pap, parse_leboncoin, get_page_source_sel
 # 		'Cache-Control': 'max-age=0',
 # 		'Connection': 'keep-alive',
 # 		  }
+
+logger = configure_logger('housing_bot')
 
 class Monitor(object):
 
@@ -28,7 +31,7 @@ class Monitor(object):
 		self.posts = {}
 
 		for site in self.urls:
-			print('[INFO] Monitoring: ' + self.urls[site])
+			logger.info('Monitoring: %s', self.urls[site])
 			self.posts[site] = set(self.check_posts(site))
 			self.save_to_cache(list(self.posts[site]), site)
 
@@ -42,10 +45,10 @@ class Monitor(object):
 		try:
 			response = requests.get(self.urls[site], headers=HEADERS, allow_redirects=True)
 			if not response.ok:
-				print('[ERROR] Could not connect to site: ' + site, ' - ' + self.response)
+				logger.error('Could not connect to site: %s - %s', site, self.response)
 			return response.text
 		except:
-			print('[ERROR] Could not connect to site: ' + site)
+			logger.error('Could not connect to site: %s', site)
 			return None
 
 
@@ -70,11 +73,11 @@ class Monitor(object):
 			if site == 'leboncoin':
 				posts = parse_leboncoin(soup, self.city, self.ratio_max)
 		except:
-			print('[ERROR] BeautifulSoup Error - Could not parse site: ' + site)
+			logger.error('BeautifulSoup Error - Could not parse site: %s', site)
 			posts = []
 
 		if not posts:
-			print('[ERROR] Could not parse site: ' + site)
+			logger.error('Could not parse site: %s', site)
 
 		# compare seulement avec les 10 derniers posts
 		if len(posts) > 10:
@@ -94,6 +97,8 @@ class Monitor(object):
 			store['cache'] = pd.concat([store['cache'], df], axis=0).drop_duplicates()
 		store.close()
 
+		insert_to_mongo('cache', df)
+
 
 	def get_from_cache(self, site):
 		store = pd.HDFStore('cache.h5') 
@@ -107,8 +112,9 @@ class Monitor(object):
 			posts_old = set(self.get_from_cache(site))
 			posts = set(self.check_posts(site))
 			new_posts = posts - posts_old
-			print('[INFO] ' + str(len(new_posts)) + ' new post(s) on ' + site + ' for ' + self.city + ' (' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ')')
 
+			logger.info('%s new post(s) on %s for %s', len(new_posts), site, self.city)
+	
 			save_last_check(self.city, site)
 
 			if new_posts:

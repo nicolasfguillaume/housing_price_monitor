@@ -1,6 +1,10 @@
 import os, datetime
 from selenium import webdriver
 
+from utils import configure_logger
+
+logger = configure_logger('housing_bot')
+
 URL = "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=92&department_near=1&real_estate_type=1,2,5&price=75000-125000"
 
 # https://intoli.com/blog/javascript-injection/
@@ -37,17 +41,19 @@ def inject_js():
 	driver.quit()
 
 
+def take_snapshot(driver):
+	# Save the results as an image
+	filename = datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ".png"
+	driver.get_screenshot_as_file(filename)
+
+
 def inject_js_with_driver(driver):
-		# Navigate to the test page and inject the JavaScript.
+	# Navigate to the test page and inject the JavaScript.
 	driver.get(URL)
 	# waiting for all of these resources to load before executing the JavaScript
 	driver.execute_async_script(injected_javascript)
 
 	html_source = driver.page_source
-	print('leboncoin: html_source + injected JS:')
-	print(html_source)
+	logger.info('leboncoin: html_source + injected JS: %s', html_source)
 
-	# Save the results as an image.
-	filename = datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ".png"
-	driver.get_screenshot_as_file(filename)
-
+	# take_snapshot(driver)

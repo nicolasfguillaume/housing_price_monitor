@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import yaml
 import threading
+
 from monitor import Monitor
+from utils import get_db, get_config
 
 if __name__ == '__main__':
 
-	with open("config.yml", 'r') as f:
-		config = yaml.load(f)
-
-	search_data = config['data']
+	search_data = get_config()
 	searches = [item['city'] for item in search_data]
 	print('[INFO] Searches: ', searches)
 

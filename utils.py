@@ -3,6 +3,7 @@ import os
 import re 
 import datetime
 import yaml
+import logging
 from selenium import webdriver
 import requests
 from pymongo import MongoClient
@@ -15,8 +16,30 @@ from pymongo import MongoClient
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
 
 
-client = MongoClient('mongodb://mongodb:27017/')
-db = client.house
+def configure_logger(logger_name):
+	# see https://docs.python.org/2/library/logging.html
+	FORMAT = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+	logging.basicConfig(format=FORMAT)
+	logger = logging.getLogger(logger_name)
+	# lowest level to be displayed
+	logger.setLevel(logging.DEBUG)   
+
+	return logger
+
+
+logger = configure_logger('housing_bot')
+
+
+def get_config():
+	with open("config.yml", 'r') as f:
+		config = yaml.load(f)
+	return config['data']
+	
+
+def get_db():
+	client = MongoClient('mongodb://mongodb:27017/')
+	db = client.house
+	return db
 
 
 def init_driver(browser='firefox'):
@@ -52,23 +75,25 @@ def init_driver(browser='firefox'):
 		# for r in res:
 		# 	print(r)
 
-		print('[INFO] Info about the headers:')
+		# print('[INFO] Info about the headers:')
 		# driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
 		driver.get("https://httpbin.org/headers")
 		html_source = driver.page_source
 		# soup = BeautifulSoup(html_source, 'html.parser')
 		# res = soup.findAll("div", {"class": "content"})
 		# print(res)
-		print(html_source)
+		# print(html_source)
+		logger.info('Info about the headers: %s', html_source)
 
-		print('[INFO] Info about the cookies:')
+		# print('[INFO] Info about the cookies:')
 		# driver.get("https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending")
 		driver.get("https://httpbin.org/cookies")
 		html_source = driver.page_source
 		# soup = BeautifulSoup(html_source, 'html.parser')
 		# res = soup.findAll("div", {"class": "content"})
 		# print(res)
-		print(html_source)
+		# print(html_source)
+		logger.info('Info about the headers: %s', html_source)
 
 	# DEBUG
 	if browser == 'chrome':
@@ -83,9 +108,7 @@ def init_driver(browser='firefox'):
 
 
 # TODO : refactor !!
-with open("config.yml", 'r') as f:
-	config = yaml.load(f)
-search_data = config['data']
+search_data = get_config()
 searches = [item['city'] for item in search_data]
 search_data = {searches[i]: [item for item in search_data if item['city'] == searches[i]][0] for i in range(len(searches))}
 BROWSER = search_data['paris']['browser']
@@ -114,6 +137,8 @@ def get_page_source_selenium(url):
 
 
 def browse(urls, city):
+	db = get_db()
+
 	if BROWSER == 'firefox':
 		for url in urls:
 			os.system("open {}".format(url))
@@ -122,116 +147,35 @@ def browse(urls, city):
 		for url in urls:
 			item = {'url': url, 'city': city}
 			db.urls.insert_one(item)
-			print('[INFO] Inserted: ' + str(item))
+			logger.info('Inserted: %s', item)
+			# print('[INFO] Inserted: ' + str(item))
+
+
+def insert_one_to_mongo(collection, item):
+	db = get_db()
+	db[collection].insert_one(item)
+
+
+def insert_to_mongo(collection, df):
+	for index, row in df.iterrows():
+		insert_one_to_mongo(collection, row.to_dict())
 
 
 def save_last_check(city, site):
-	item = {#'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-	        'date': datetime.datetime.now(),
+	item = {'date': datetime.datetime.now(),
 			'city': city,
 			'site': site}
-	db.last_check.insert_one(item)
+	insert_one_to_mongo(collection='last_check', item=item)
+
+
+def load_config_to_mongo():
+	db = get_db()
+	db.config.drop()
+	searches = get_config()
+
+	for item in searches:
+		insert_one_to_mongo('config', item)
 
 
 def keep_only_numeric(val):
 	return re.sub("[^0-9\,]", "", val).replace(',', '.')
-
-
-def parse_seloger(soup, city, ratio_max):
-	posts = []
-	prices = []
-	surfaces = []
-
-	# DEBUG
-	# debug = soup.prettify()[53000:57000]
-	# print(debug)
-	# print('cartouche in debug:')
-	# print('cartouche' in debug)
-	# print('persoModuleContent in debug:')
-	# print('persoModuleContent' in debug)
-
-	for post in soup.findAll("div", {"class": "c-pa-list c-pa-sl cartouche "}):
-
-		link = post.find("a", {"class": "c-pa-link link_AB"}).attrs['href'] 
-		surface = post.find("div", {"class": "c-pa-criterion"})
-		surface = surface.find_all("em")
-		if surface:
-			surface = surface[1]
-		price = post.find("div", {"class": "c-pa-price"})
-		price = price.find("span", {"class": "c-pa-cprice"})
-
-		if price:
-			price = price.string
-			price = keep_only_numeric(price)
-			prices.append(price)
-		if surface:
-			surface = surface.string.split(u'm²')[0]
-			surface = keep_only_numeric(surface)
-			surfaces.append(surface)
-		if price and surface:
-			ratio = float(price) / float(surface)
-			if ratio <= ratio_max:
-				posts.append(link)
-
-	return posts
-
-
-def parse_pap(soup, city, ratio_max):
-	"""pour annonces de ventes immo et locations""" 
-	url_pap = 'https://www.pap.fr'
-
-	posts = []
-	prices = []
-	surfaces = []
-
-	for post in soup.findAll("a", {"class": "item-title"}):
-
-		link = url_pap + post.attrs['href']
-
-		# TODO refactor
-		if 'adtech.de/adlink' in link:
-			continue
-		if 'vendeur/estimation-gratuite' in link:
-			continue
-		if 'immoneuf.com/programme' in link:
-			continue
-
-		price = post.find("span", {"class": "item-price"})
-		surface = post.find("span", {"class": "h1"})
-
-		if price:
-			price = price.strong.string
-			price = keep_only_numeric(price)
-			prices.append(price)
-		if surface:
-			surface = surface.string.split(u'm²')[0]
-			surface = keep_only_numeric(surface)
-			surfaces.append(surface)
-		if price and surface:
-			ratio = float(price) / float(surface)
-
-		if ratio_max:
-			if ratio <= ratio_max:
-				posts.append(link)
-		else:
-			posts.append(link)
-
-	url_to_discard = ['https://www.pap.fr//vendeur/estimation-gratuite',
-					  'https://www.pap.fr//vendeur/bilan-projet-vente',
-					  'https://www.pap.fr/annonceur/passer?produit=vente&itm_source=liste-annonces&itm_campaign=liste-annonces-pa-vente']
-
-	for url_to_d in url_to_discard:
-		if url_to_d in posts:
-			posts.remove(url_to_d)
-
-	return posts
-
-
-def parse_leboncoin(soup, city, ratio_max):
-	"""pour annonces de ventes immo et locations""" 
-	url_leboncoin = 'https://www.leboncoin.fr'
-
-	posts = [url_leboncoin + post.attrs['href']
-			for post in soup.findAll("a", {"class": "clearfix trackable"})]
-
-	return posts
