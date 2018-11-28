@@ -17,7 +17,7 @@ from parsers import parse_seloger, parse_pap, parse_leboncoin
 # 		'Connection': 'keep-alive',
 # 		  }
 
-logger = configure_logger('housing_bot')
+logger = configure_logger('worker')
 
 class Monitor(object):
 
@@ -52,7 +52,7 @@ class Monitor(object):
 			return None
 
 
-	def check_posts(self, site):
+	def check_posts(self, site, save_to_cache_option=True):
 		# if site == 'seloger':
 		html_source = get_page_source_selenium(self.urls[site])
 		# else:
@@ -83,7 +83,8 @@ class Monitor(object):
 		if len(posts) > 10:
 			posts = posts[0:10]
 
-		self.save_to_cache(posts, site)
+		if save_to_cache_option:
+			self.save_to_cache(posts, site)
 
 		return posts
 

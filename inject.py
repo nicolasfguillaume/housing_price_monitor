@@ -3,7 +3,7 @@ from selenium import webdriver
 
 from utils import configure_logger
 
-logger = configure_logger('housing_bot')
+logger = configure_logger('inject')
 
 URL = "https://www.leboncoin.fr/recherche/?category=9&regions=12&departments=92&department_near=1&real_estate_type=1,2,5&price=75000-125000"
 

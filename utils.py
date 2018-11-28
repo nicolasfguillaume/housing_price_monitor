@@ -27,7 +27,7 @@ def configure_logger(logger_name):
 	return logger
 
 
-logger = configure_logger('housing_bot')
+logger = configure_logger('utils')
 
 
 def get_config():

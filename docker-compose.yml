@@ -48,6 +48,9 @@ services:
   mongodb:
     restart: always
     image: mongo:3.4.6
+    # disable logger
+    logging:
+      driver: none
 
 # networks:
 #   static-network:

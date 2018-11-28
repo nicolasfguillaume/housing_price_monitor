@@ -9,9 +9,10 @@ from pymongo import MongoClient
 
 from utils import get_db, get_config, load_config_to_mongo, configure_logger
 
-logger = configure_logger('housing_bot')
-
 app = Flask(__name__)
+
+logger = configure_logger('front')
+configure_logger('werkzeug')  # redefining HTTP logger is necessary
 
 load_config_to_mongo()
 db = get_db()
@@ -41,6 +42,8 @@ def index(city):
 								window.open(data[i], '_blank');
 							}}
 						}}
+
+						console.log('ping');
 
 						//Send another request in 60 seconds.
 						setTimeout(function(){{
@@ -98,12 +101,17 @@ def api(city):
 	cursor = db.urls.find({'city': city})
 	urls = [c['url'] for c in cursor]
 
+	# FIXME : werkzeug logger doesnt work in docker container
+	# import datetime
+	# print(datetime.datetime.now(), '[INFO] web: GET /api/', city, '200 -')
+
 	if len(urls) == 0:
 		return jsonify({})
 
 	db.urls.remove({'city': city})
 
 	logger.info('Removed urls for: %s', city)
+	# ou app.logger.info('Removed urls for: %s', city)
 
 	return jsonify(urls)
 
@@ -130,4 +138,4 @@ def last(city):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', use_reloader=True)
+	app.run(host='0.0.0.0', use_reloader=True, debug=True)
