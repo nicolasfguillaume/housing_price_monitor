@@ -1,6 +1,6 @@
 # housing_price_monitor
 
-+ Simple script that checks new posts every 15 min
++ Simple script that checks new posts almost in real time (every 5 min)
 
 + Works for major French real estate websites: seloger.com, leboncoin.com, pap.com
 
