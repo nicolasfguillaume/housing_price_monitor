@@ -1,4 +1,4 @@
-# housing_price_monitor
+# Housing Price Monitor
 
 + Simple script that checks new posts almost in real time (every 5 min)
 
