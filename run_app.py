@@ -69,9 +69,23 @@ def index(city):
 							}}
 						}}
 
-						$('#p_last_check').html('<p style="background-color:red;">Error</p>')
-						if (data.length > 0) {{		
-							$('#p_last_check').html('<p style="background-color:green;">Running...</p>')
+						seloger = $(data).filter((i,n) => n.site==='seloger');
+						pap = $(data).filter((i,n) => n.site==='pap');
+						leboncoin = $(data).filter((i,n) => n.site==='leboncoin');
+
+						$('#p_last_check_seloger').html('<span style="background-color:red;">seloger: error</span>')
+						if (seloger.length > 0) {{		
+							$('#p_last_check_seloger').html('<span style="background-color:green;">seloger: running...</span>')
+						}}
+
+						$('#p_last_check_pap').html('<span style="background-color:red;">pap: error</span>')
+						if (pap.length > 0) {{		
+							$('#p_last_check_pap').html('<span style="background-color:green;">pap: running...</span>')
+						}}
+
+						$('#p_last_check_leboncoin').html('<span style="background-color:red;">leboncoin: error</span>')
+						if (leboncoin.length > 0) {{		
+							$('#p_last_check_leboncoin').html('<span style="background-color:green;">leboncoin: running...</span>')
 						}}
 
 						//Send another request in 60 seconds.
@@ -90,7 +104,10 @@ def index(city):
 				<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 			  </head>
 				{0}
-				<br><p id="p_last_check"></p>
+				<br>
+				<span id="p_last_check_seloger"></span>
+				<span id="p_last_check_pap"></span>
+				<span id="p_last_check_leboncoin"></span>
 				<script>{1}</script>
 		   """.format(str(search_city), code_check_api + code_check_last)
 
@@ -132,7 +149,9 @@ def last(city):
 	d = datetime.datetime.now() - datetime.timedelta(minutes=10)
 	# retourne les 10 dernieres min
 	cursor = db.last_check.find({'city': city, "date": {"$gt": d}}).sort("date")
-	items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'].strftime("%Y-%m-%d %H:%M") for c in cursor]
+
+	#items = [c['city'] + ' - ' + c['site'] + ' - ' + c['date'].strftime("%Y-%m-%d %H:%M") for c in cursor]
+	items = [{'city': c['city'], 'site': c['site'], 'date': c['date'].strftime("%Y-%m-%d %H:%M")} for c in cursor]
 
 	return jsonify(items)
 
