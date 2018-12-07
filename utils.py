@@ -42,7 +42,7 @@ def get_db():
 	return db
 
 
-def init_driver(browser='firefox'):
+def init_driver(browser='firefox', debug=False):
 
 	assert browser in ['firefox', 'chrome']
 
@@ -95,8 +95,7 @@ def init_driver(browser='firefox'):
 		# print(html_source)
 		logger.info('Info about the headers: %s', html_source)
 
-	# DEBUG
-	if browser == 'chrome':
+	if (browser == 'chrome') and not debug:
 		from inject import inject_js_with_driver
 		inject_js_with_driver(driver)
 		whatismybrowser(driver)

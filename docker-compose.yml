@@ -20,7 +20,17 @@ version: '2'
 
 services:
 
+  test_worker:
+    build: . 
+    volumes:
+      - ./:/usr/workspace/
+    command: python test_worker.py  # TODO: use nosetests instead
+    environment:
+      - PYTHONUNBUFFERED=1
+
   worker:
+    depends_on:
+      - test_worker
     restart: always
     build: . 
     volumes:
